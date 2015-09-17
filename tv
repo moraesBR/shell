@@ -1,0 +1,189 @@
+#!/bin/bash
+#
+# tv - Watch Online TV
+#
+# Author: Albert R. M. Lopes <albert.richard@gmail.com>
+# First Release: 15 de Setembro de 2015
+#
+# ------------------------------------------------------------------
+#
+# Watch Online TV. The TV accesses the television channels that are 
+# entries in the user database. The database consists of files on 
+# listname.channels default, stored in the $CHANNELDIR directory. 
+# The channels are entered in the following form in the data file:
+#	CHANNEL ID;CHANNEL DESCRIPTION;CHANNEL LINK
+#
+# ------------------------------------------------------------------
+#
+# Historic:
+#
+# V1.0 2015-09-15, Albert Moraes:
+#	initial release with the following functions: 
+# 		- watch channel tv
+#		- insert channel
+#		- remove channel
+#		- list channels
+#		- database manipulations
+#
+# License: GPL
+#
+
+EXT=.channels
+CHANNELDIR="$HOME/".channels
+DEFAULTFILE=default.channels
+TEMP="$CHANNELDIR/"tv.tmp
+HEADER="# CHANNEL_ID;DESCRIPTION;CHANNEL_ADDR"
+
+USAGE_MSG="
+Usage: $(basename $0) <OPTIONS> [<parameters>]
+Watch Online TV. The TV accesses the television channels that are 
+entries in the user database.
+
+selection options
+   -d|--database <FUNCTION>
+		Database manipulations
+	create		creates the database if it does not exist.
+	delete		delete the database.
+	drop <LIST> ... [LIST] 
+			delete channel list.
+	insert <LIST> ... [LIST]
+			insert channel list.
+
+   -h|--help	Shows how to use the program.
+
+   -i|--insert <CHANNEL_ID> <DESCRIPTION> <CHANNEL_ADDR> [LIST]	
+		Inserts the channel in the database.
+
+	CHANNEL_ID	Channel Identification.
+	DESCRIPTION	Description of the channel.
+	CHANNEL_ADDR	Link of the channel. Address must be 
+			compatible with ffplay program. By default, 
+			use rtmp link.
+	LIST		Channel list.
+
+   -l|--list	Lists the available channels in the database.
+
+   -r|--remove	<CHANNEL_ID> [LIST]
+		Remove the channel in the database. By default, 
+		the channel is removed from the default list.
+
+	CHANNEL_ID      Channel ID to be removed.
+	LIST            Specific list for channel removal
+
+   -w|--watch	Watch the channel TV.
+
+	CHANNEL_ID      Channel Identification.
+
+HOW TO INSTALL
+
+   1. Install ffplay. For Ubuntu:
+	sudo apt-get update
+	sudo apt-get install ffmpeg
+
+   2. Install tv anywhere where the user has execute permission and
+      is on the path.
+
+   3. Create database:
+	tv -d create
+
+   4. OPTIONAL: Create channels lists
+	tv -d insert <list 1> ... <list n>
+
+"
+
+case $1 in
+
+	-d|--database)
+	
+		case $2 in
+			create) 
+				[ ! -d $CHANNELDIR ] && mkdir $CHANNELDIR && \
+				echo "$HEADER" > $CHANNELDIR/$DEFAULTFILE;;
+
+			delete) 
+				[ -d $CHANNELDIR ] && rm -r $CHANNELDIR ;;
+
+			drop) 
+				
+				while [ -n "$3" ]
+				do
+					[ -f $CHANNELDIR/$3$EXT ] && rm $CHANNELDIR/$3$EXT
+					shift
+				done
+			;;
+
+			insert) 
+				
+				while [ -n "$3" ]
+                                do
+                                        [ ! -f $CHANNELDIR/$3$EXT ] && \
+						echo "$HEADER" > $CHANNELDIR/$3$EXT
+                                        shift
+                                done
+                        ;;
+		esac		
+	;;
+
+	-h|--help) 
+
+		echo "$USAGE_MSG"
+
+	;;
+
+	-i|--insert) 
+		
+		[ $# -eq 4 ] && echo "$2"';'"$3"';'"$4" >> "$CHANNELDIR/$DEFAULTFILE" && exit
+		[ $# -eq 5 ] && echo "$2"';'"$3"';'"$4" >> "$CHANNELDIR/$5".channels && exit
+		echo -e "tv: Missing Operators\nUsage: tv -i <ID_CHANNEL> <DESCRIÇÃO> <ADDR CHANNEL> [LIST]"
+	;;
+
+	-l|--list)
+
+		echo "$(for ch in $CHANNELDIR/*$EXT; do \
+			echo "LIST: $(
+			echo "$ch" | \
+        			rev | \
+		                cut -d '/' -f1 | \
+		                rev | 
+				sed "s/$EXT//g")"; \
+		        echo -e "ID_CANAL\tDESCRIÇÃO"; \
+			cat $ch | \
+		      		egrep -v '^(#|$)' | \
+				cut -d ';' -f1-2 | \
+				sed 's/;/\t\t/g' | sort ; \
+			echo; \
+		done)"
+
+	;;
+
+	-r|--remove) 
+		
+		[ $# -eq 2 ] && \
+			( grep -i -w -v "^$2" "$CHANNELDIR/$DEFAULTFILE" > "$TEMP"; \
+			  mv "$TEMP" "$CHANNELDIR/$DEFAULTFILE"	) && exit
+
+		[ $# -eq 3 ] && \
+			( grep -i -w -v "^$2" "$CHANNELDIR/$3$EXT" > "$TEMP"; \
+			mv "$TEMP" "$CHANNELDIR/$3$EXT" ) && exit
+
+		echo -e "tv: Missing Operators\nUsage: tv -r <ID_CHANNEL> [LIST]"
+	;;
+
+        -w|--watch)
+
+		[ $# -lt 2 ] && \
+			echo -e 'tv: Missing operating channel\nUsage: tv -w <ID_CHANNEL>' \
+			&& exit
+
+        	channel="$(cat $CHANNELDIR/*$EXT | egrep "$2" | cut -d ';' -f3)"
+		
+		[ "$(echo $channel)" = '' ] && echo 'tv: channel not found' && exit
+
+		([ "$(echo $channel | egrep 'php')" == '' ] && ffplay "$channel" ) || echo "$channel"
+
+	;;
+
+	*)
+		echo -e "Try 'tv -h' or 'tv --help' for more information."
+	
+esac
