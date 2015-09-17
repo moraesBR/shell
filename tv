@@ -28,9 +28,9 @@
 # License: GPL
 #
 
-EXT=.channels
 CHANNELDIR="$HOME/".channels
-DEFAULTFILE=default.channels
+EXT=.channels
+DEFAULTFILE=default"$EXT"
 TEMP="$CHANNELDIR/"tv.tmp
 HEADER="# CHANNEL_ID;DESCRIPTION;CHANNEL_ADDR"
 
