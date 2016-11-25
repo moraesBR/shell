@@ -32,16 +32,6 @@
 #		  - Mecanismo de extração das sondagens (via função ext_sondagem) funcionando
 # 		  - Inserção do endereço para contribuições e relatar bugs.
 #
-# Objetivo: Por padrão, Realiza o download de radiossondagens pela University of Wyoming para as seguintes estações:
-#	    Bloco 82:
-#		  - Santarém  - 82244
-#		  - São Luiz  - 82281
-#		  - Macapá    - 82099
-#		  - Belém     - 82193
-#	  	  - Boa Vista - 82022
-#		  - Manaus    - 82332
-#	    Bloco 83:	  
-#	  	  - Palmas    - 83065
 # Sintaxe: dw_sondagens.sh [-v=<val> | --valor=<val>]
 #	   Para mais detalhes use: get_sounding.sh --help
 
