@@ -108,7 +108,7 @@ ajuda() {
 
 	# Outras informações
 	printf "%-"$COLUNAS"s\n" 'Autor: Albert Richard M. L. <albert.richard@gmail.com>'
-	printf "%-"$COLUNAS"s\n\n" 'Para contribuições e relatar bugs:'
+	printf "%-"$COLUNAS"s\n\n" 'Para contribuições e relatar bugs: <https://github.com/moraesBR/shell/blob/master/dw_sondagens.sh>'
 	exit
 }
 
