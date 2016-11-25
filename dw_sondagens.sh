@@ -112,6 +112,13 @@ ajuda() {
 	exit
 }
 
+# ALGORITMO DE EXTRAÇÃO DAS RADIOSSONDAGENS
+# 1) Recebe o endereço completo do arquivo de dados brutos e o conjunto de horários das radiossondagens que o usuário deseja.
+# 2) Filtra os cabeçalhos de todas as sondagens
+# 3) Armazena todas as posições iniciais e finais das sondagens
+# 4) Extrai as radiossondagens se o horário descrito no cabeçalho da radiossondagem coincidir com alguns dos horários deseja 
+#    pelo usuário.
+# 5) Armazena as sondagem nos arquivos com o seguinte formato: <Nome da Estação>-<ANO><MES><DIA><HORÁRIO>.txt
 ext_sondagem(){
 
    ARQUIVO="$1"
@@ -126,7 +133,7 @@ ext_sondagem(){
    LFIM=($(grep -n "^</PRE><H3>" "$ARQUIVO" | awk -F: '{print $1}'))
    LTAM=${#TITULO[@]}
 
-#
+
    for i in $(seq $LTAM)
    do 
 	read ESTACAO_NOME <<< $(echo ${TITULO[$(expr $i-1)]} | awk -F ":" '{print $2}')
@@ -144,7 +151,7 @@ ext_sondagem(){
 
 # ---------------------------------------------------------------------------------------------------------
 
-# -------- FILTRO DE OPÇÕES DO COMANDO ----------
+# -------- FILTRO DE OPÇÕES ----------
 
 while test $# -gt 0 ; do
 	optarg=`echo $1 | cut -d= -f2 `
@@ -210,7 +217,8 @@ done
 
 
 # ---------------------------------- CODIGO PRINCIPAL ----------------------------------------
-
+# GARANTE QUE AS VARIÁVEIS DE ENTRADA NÃO ESTÃO VAZIAS E, POR CONSEQUÊNCIA, O FUNCIONAMENTO
+# DO SCRIPT.
 test -z "$LOCAL" && 
 	echo "Armazenando no diretório $PWD" &&
 	LOCAL=$(pwd)
@@ -238,6 +246,16 @@ test -z "$DATAFINAL"&&
 HORA_INICIAL=$(echo "$HORARIOS" | head -1)	# Determina a menor hora UTC informada
 HORA_FINAL=$(echo "$HORARIOS" |  tail -1)	# Determina a maior hora UTC informada
 
+# Algoritmo para o download dos dados brutos.
+# 1) Entra com uma data inicial no formato AAAA/MM/DD.
+# 2) Enquanto a data inicial (sem '\') for menor ou igual a data final ('sem '\''), faça:
+#	a) Estabele o inicío e o fim do período no mês:
+#		- No primeiro ciclo, o inicío coincide com a data inicial.
+#		- O fim do ciclo coincide com o fim do mês, caso não seja superior a data final. 
+#		      Se for, a data final será o fim.
+#	b) Efetua o download da radiossondagens no período determinado no passo 2.a:
+#		- O download é armazenado em um arquivo temporário no diretórío $LOCAL.
+#	c) Chama a função ext_sondagem para separar as sondagens desejadas pelo usuário.
 D_INICIAL="$DATAINICIAL"
 while [ "$(date -d "$D_INICIAL" +'%Y%m%d')" -le "$(date -d "$DATAFINAL" +'%Y%m%d')" ] 
 do
